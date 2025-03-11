@@ -1,38 +1,38 @@
 <?php
-require_once '../app/config/database.php';
-require_once '../app/models/User.php';
-require_once '../app/models/SinhVien.php';
+require_once __DIR__ . '/../models/SinhVien.php';
+require_once __DIR__ . '/../models/User.php';
 
 class SinhVienController {
-    private $userModel;
+    private $conn;
     private $svModel;
+    private $userModel;
 
-    public function __construct() {
-        $db = new Database();
-        $conn = $db->getConnection();
-
-        $this->userModel = new User($conn);
+    public function __construct($conn) {
+        $this->conn = $conn;
+        // Khởi tạo model với PDO được tiêm vào
         $this->svModel = new SinhVien($conn);
+        $this->userModel = new User($conn);
     }
 
     // Hiển thị danh sách sinh viên
     public function index() {
         $sinhviens = $this->svModel->getAll();
-        require_once '../app/views/sinhvien/index.php';
+        include __DIR__ . '/../views/sinhvien/index.php';
     }
 
-    // Thêm sinh viên (Hiển thị form)
+    // Hiển thị form tạo sinh viên
     public function create() {
-        require_once '../app/views/sinhvien/create.php';
+        include __DIR__ . '/../views/sinhvien/create.php';
     }
 
-    // Xử lý thêm sinh viên
+    // Xử lý thêm sinh viên (POST form)
     public function store() {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $username = $_POST['Username'];
             if (!$this->userModel->checkUserExists($username)) {
                 $hashedPassword = password_hash($_POST['Password'], PASSWORD_DEFAULT);
 
+                // Tạo user mới cho sinh viên
                 $userID = $this->userModel->createUser(
                     $username,
                     $hashedPassword,
@@ -42,6 +42,7 @@ class SinhVienController {
                     'SinhVien'
                 );
 
+                // Tạo thông tin sinh viên
                 $this->svModel->createSinhVien(
                     $userID,
                     $_POST['MaSinhVien'],
@@ -49,9 +50,10 @@ class SinhVienController {
                     $_POST['Lop']
                 );
 
-                header('Location: /sinhvien/index');
+                header("Location: ?action=sinhvien_index");
+                exit();
             } else {
-                echo "Username đã tồn tại!";
+                echo "<p style='color:red;text-align:center'>Username đã tồn tại!</p>";
             }
         }
     }
@@ -59,6 +61,7 @@ class SinhVienController {
     // Xóa sinh viên theo ID
     public function delete($id) {
         $this->svModel->deleteSinhVien($id);
-        header('Location: /sinhvien/index');
+        header("Location: ?action=sinhvien_index");
+        exit();
     }
 }
