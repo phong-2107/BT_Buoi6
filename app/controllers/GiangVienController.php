@@ -22,7 +22,7 @@ class GiangVienController {
 
     // Hiển thị form tạo giảng viên
     public function create() {
-        include __DIR__ . '/../views/giangvien/create.php';
+        include __DIR__ . '/../views/giangvien/addgiangvien.php';
     }
 
     // Xử lý thêm giảng viên (POST form)

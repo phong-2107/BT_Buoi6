@@ -14,7 +14,16 @@ class SinhVienController {
         $this->userModel = new User($conn);
     }
 
-    // Hiển thị danh sách sinh viên
+    // Phương thức hiển thị thông tin sinh viên lên trang chủ của Sinh viên (sv_home.php)
+    public function home() {
+        // Lấy tất cả sinh viên
+        $sinhviens = $this->svModel->getAll();
+        // echo "Bảng SinhVien có " . count($sinhviens) . " sinh viên.";
+        // Include view trang chủ dành cho Sinh viên
+        include __DIR__ . '/../views/sinhvien/sv_home.php';
+    }
+
+    // Phương thức hiển thị danh sách sinh viên (dành cho Admin, quản lý chung, ...)
     public function index() {
         $sinhviens = $this->svModel->getAll();
         include __DIR__ . '/../views/sinhvien/index.php';
@@ -22,7 +31,7 @@ class SinhVienController {
 
     // Hiển thị form tạo sinh viên
     public function create() {
-        include __DIR__ . '/../views/sinhvien/create.php';
+        include __DIR__ . '/../views/sinhvien/addsinhvien.php';
     }
 
     // Xử lý thêm sinh viên (POST form)
@@ -57,6 +66,42 @@ class SinhVienController {
             }
         }
     }
+
+
+    // Hiển thị form chỉnh sửa sinh viên (GET)
+    public function edit($id) {
+        // Lấy thông tin sinh viên theo ID (giả sử trả về mảng có các trường: Id, UserID, HoTen, Email, SoDienThoai, MaSinhVien, NgaySinh, Lop)
+        $sinhvien = $this->svModel->getById($id);
+        include __DIR__ . '/../views/sinhvien/edit.php';
+    }
+
+    // Xử lý cập nhật sinh viên (POST)
+    public function update() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $id = $_POST['Id'];
+            // Lấy thông tin mới từ form
+            $hoTen = $_POST['HoTen'];
+            $email = $_POST['Email'];
+            $sdt = $_POST['SoDienThoai'];
+            $maSinhVien = $_POST['MaSinhVien'];
+            $ngaySinh = $_POST['NgaySinh'];
+            $lop = $_POST['Lop'];
+
+            // Lấy thông tin cũ để lấy UserID
+            $sinhvien = $this->svModel->get($id);
+            $userId = $sinhvien['UserID'];
+
+            // Cập nhật thông tin chung trong bảng Users (giả sử updateUser được định nghĩa)
+            $this->userModel->updateUser($userId, $hoTen, $email, $sdt);
+
+            // Cập nhật thông tin sinh viên trong bảng SinhVien
+            $this->svModel->updateSinhVien($id, $maSinhVien, $ngaySinh, $lop);
+
+            header("Location: ?action=sinhvien_index");
+            exit();
+        }
+    }
+
 
     // Xóa sinh viên theo ID
     public function delete($id) {

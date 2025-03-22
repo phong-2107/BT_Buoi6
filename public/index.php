@@ -6,37 +6,35 @@ require_once __DIR__ . '/../app/config/database.php';
 // Nạp các Controller
 require_once __DIR__ . '/../app/controllers/SinhVienController.php';
 require_once __DIR__ . '/../app/controllers/GiangVienController.php';
+require_once __DIR__ . '/../app/controllers/UserController.php';
+require_once __DIR__ . '/../app/controllers/HuongDanController.php';
 
 // Lấy đối tượng PDO thông qua Singleton Database
 $db = Database::getInstance();
 $conn = $db->getConnection();
 
-// Tạo đối tượng Controller
-$sinhVienController = new SinhVienController($conn);
-$giangVienController = new GiangVienController($conn);
+// Tạo các đối tượng Controller với dependency injection (PDO)
+$sinhVienController   = new SinhVienController($conn);
+$giangVienController  = new GiangVienController($conn);
+$userController       = new UserController($conn);
+$huongDanController   = new HuongDanController($conn);
 
-// Lấy action từ URL (VD: ?action=sinhvien_create)
+// Lấy action từ URL (ví dụ: ?action=sinhvien_create, ?action=login, ?action=assign, ...)
 $action = isset($_GET['action']) ? $_GET['action'] : 'home';
 
-// Điều hướng đến Controller/Method tùy vào action
+// Điều hướng đến Controller/Method tương ứng với action
 switch ($action) {
     // =================== SINH VIÊN ===================
     case 'sinhvien_index':
         $sinhVienController->index();
         break;
-
     case 'sinhvien_create': 
-        // Hiển thị form tạo sinh viên
-        $sinhVienController->create(); 
+        $sinhVienController->create();
         break;
-
     case 'sinhvien_store':
-        // Xử lý form POST tạo sinh viên
         $sinhVienController->store();
         break;
-
     case 'sinhvien_delete':
-        // Xóa sinh viên theo ID
         if (isset($_GET['id'])) {
             $sinhVienController->delete($_GET['id']);
         } else {
@@ -48,19 +46,13 @@ switch ($action) {
     case 'giangvien_index':
         $giangVienController->index();
         break;
-
     case 'giangvien_create':
-        // Hiển thị form tạo giảng viên
         $giangVienController->create();
         break;
-
     case 'giangvien_store':
-        // Xử lý form POST tạo giảng viên
         $giangVienController->store();
         break;
-
     case 'giangvien_delete':
-        // Xóa giảng viên theo ID
         if (isset($_GET['id'])) {
             $giangVienController->delete($_GET['id']);
         } else {
@@ -68,13 +60,50 @@ switch ($action) {
         }
         break;
 
-    // =================== TRANG CHỦ HOẶC MẶC ĐỊNH ===================
+    // =================== USER (ĐĂNG NHẬP/ĐĂNG KÝ/ĐĂNG XUẤT) ===================
+    case 'login':
+        $userController->login();
+        break;
+    case 'register':
+        $userController->register();
+        break;
+    case 'logout':
+        $userController->logout();
+        break;
+
+    // =================== PHÂN CÔNG GIẢNG VIÊN HƯỚNG DẪN ===================
+    case 'assign':
+        $huongDanController->assign();
+        break;
+    case 'search':
+        $huongDanController->searchLists();
+        break;
+    // =================== TRANG CHỦ THEO QUYỀN ===================
+    case 'sv_home':
+        $sinhVienController->home();
+        break;
+    case 'gv_home':
+        include __DIR__ . '/../app/views/giangvien/gv_home.php';
+        break;
+    case 'admin_home':
+        include __DIR__ . '/../app/views/user/admin_home.php';
+        break;
+        
+    // =================== TRANG CHỦ MẶC ĐỊNH ===================
     case 'home':
     default:
-        // Trang chủ đơn giản
-        echo "<h1>Trang chủ</h1>";
-        echo "<p>Chọn chức năng bên trên...</p>";
-        // Bạn cũng có thể include file view home, ví dụ:
-        // include __DIR__ . '/../app/views/home.php';
+        $title = "Trang Chủ";
+        $content = '
+            <div class="jumbotron">
+                <h1 class="display-4">Chào mừng đến với Hệ thống Quản lý</h1>
+                <p class="lead">Chọn chức năng bên trên để quản lý Sinh Viên và Giảng Viên.</p>
+                <hr class="my-4">
+                <p>Nếu chưa có tài khoản, hãy đăng ký ngay hoặc đăng nhập để tiếp tục.</p>
+                <a class="btn btn-primary btn-lg" href="?action=register" role="button">Đăng ký</a>
+                <a class="btn btn-success btn-lg" href="?action=login" role="button">Đăng nhập</a>
+            </div>
+        ';
+        include __DIR__ . '/../app/views/layouts/main.php';
         break;
 }
+?>

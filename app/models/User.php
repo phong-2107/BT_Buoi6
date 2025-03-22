@@ -6,6 +6,13 @@ class User extends Database {
         $this->conn = $dbConn;
     }
 
+    // Lấy thông tin user theo UserID
+    public function get($userId) {
+        $stmt = $this->conn->prepare("SELECT * FROM Users WHERE UserID = :id");
+        $stmt->execute([':id' => $userId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
     // Đăng nhập bằng username và password
     public function getUserByCredentials($username, $password) {
         $stmt = $this->conn->prepare("SELECT * FROM Users WHERE Username = :username");
@@ -41,5 +48,19 @@ class User extends Database {
             ':userType' => $userType
         ]);
         return $this->conn->lastInsertId();
+    }
+    
+    // Cập nhật thông tin user (dành cho Sinh viên khi cập nhật thông tin cá nhân)
+    public function updateUser($userId, $hoTen, $email, $sdt) {
+        $sql = "UPDATE Users 
+                SET HoTen = :hoten, Email = :email, SoDienThoai = :sdt 
+                WHERE UserID = :id";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([
+            ':hoten' => $hoTen,
+            ':email' => $email,
+            ':sdt'   => $sdt,
+            ':id'    => $userId
+        ]);
     }
 }
